@@ -1,0 +1,100 @@
+Names Default To Here( 1 );
+
+dt = Current Data Table();
+
+If( Is Empty( dt ),
+  Throw( "No open data table." )
+);
+
+sortedLabelValues = {};
+
+For( i = 1, i <= N Rows( dt ), i++,
+  Insert Into( sortedLabelValues, dt[i, 4] );
+);
+
+// Function to find unique values
+FindUnique = Function( {values},
+  uniqueValues = {};
+  For( i = 1, i <= N Items( values ), i++,
+    value = values[i];
+    If( !Contains( uniqueValues, value ),
+      Insert Into( uniqueValues, value );
+    );
+  );
+  Return( uniqueValues );
+);
+
+// Function to find intersection
+FindIntersect = Function( {list1, list2},
+  intersectList = {};
+  For( i = 1, i <= N Items( list1 ), i++,
+    value = list1[i];
+    If( Contains( list2, value ),
+      Insert Into( intersectList, value );
+    );
+  );
+  Return( intersectList );
+);
+
+// Function to find union
+FindUnion = Function( {list1, list2},
+  unionList = {};
+  unionList = list1;
+  For( i = 1, i <= N Items( list2 ), i++,
+    value = list2[i];
+    If( !Contains( unionList, value ),
+      Insert Into( unionList, value );
+    );
+  );
+  Return( unionList );
+);
+
+sortedLabels = FindUnique( sortedLabelValues );
+
+jaccardTable = New Table( "Jaccard Scores",
+  Add Rows( N Rows( dt ) * N Items( sortedLabels ) ),
+  New Column( "Card Label", Character, Nominal ),
+  New Column( "Sorted Label", Character, Nominal ),
+  New Column( "Jaccard Score", Numeric, Continuous )
+);
+
+rowCounter = 1;
+
+For( row = 1, row <= N Rows( dt ), row++,
+  cardLabel = dt[row, 3];
+  cardRows = {};
+  For( i = 1, i <= N Rows( dt ), i++,
+    If( dt[i, 3] == cardLabel,
+      Insert Into( cardRows, i );
+    );
+  );
+  cardRows = FindUnique(cardRows);
+
+  For( j = 1, j <= N Items( sortedLabels ), j++,
+    sortedLabel = sortedLabels[j];
+    sortedRows = {};
+    For( i = 1, i <= N Rows( dt ), i++,
+      If( dt[i, 4] == sortedLabel,
+        Insert Into( sortedRows, i );
+      );
+    );
+    sortedRows = FindUnique(sortedRows);
+
+    intersection = N Items( FindIntersect( cardRows, sortedRows ) );
+    union = N Items( FindUnion( cardRows, sortedRows ) );
+
+    If( union > 0,
+      jaccardScore = intersection / union;
+    ,
+      jaccardScore = 0;
+    );
+
+    jaccardTable:Card Label[rowCounter] = cardLabel;
+    jaccardTable:Sorted Label[rowCounter] = sortedLabel;
+    jaccardTable:Jaccard Score[rowCounter] = jaccardScore;
+
+    rowCounter++;
+  );
+);
+
+jaccardTable << Show Window();
