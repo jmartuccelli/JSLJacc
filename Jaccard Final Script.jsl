@@ -12,7 +12,6 @@ For( i = 1, i <= N Rows( dt ), i++,
   Insert Into( sortedLabelValues, dt[i, 4] );
 );
 
-// Function to find unique values
 FindUnique = Function( {values},
   uniqueValues = {};
   For( i = 1, i <= N Items( values ), i++,
@@ -24,7 +23,6 @@ FindUnique = Function( {values},
   Return( uniqueValues );
 );
 
-// Function to find intersection
 FindIntersect = Function( {list1, list2},
   intersectList = {};
   For( i = 1, i <= N Items( list1 ), i++,
@@ -36,7 +34,6 @@ FindIntersect = Function( {list1, list2},
   Return( intersectList );
 );
 
-// Function to find union
 FindUnion = Function( {list1, list2},
   unionList = {};
   unionList = list1;
